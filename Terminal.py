@@ -39,8 +39,7 @@ class TerminalSelector():
     @staticmethod
     def get(terminal_key):
         package_dir = os.path.join(sublime.packages_path(), installed_dir)
-        terminal = get_setting(terminal_key)
-        if terminal:
+        if terminal := get_setting(terminal_key):
             dir, executable = os.path.split(terminal)
             if not dir:
                 joined_terminal = os.path.join(package_dir, executable)
@@ -64,7 +63,7 @@ class TerminalSelector():
                 # from cmd.exe, but this creates a custom mapping, and then
                 # the LaunchPowerShell.bat file adjusts some other settings.
                 key_string = 'Console\\%SystemRoot%_system32_' + \
-                    'WindowsPowerShell_v1.0_powershell.exe'
+                        'WindowsPowerShell_v1.0_powershell.exe'
                 try:
                     key = _winreg.OpenKey(_winreg.HKEY_CURRENT_USER,
                         key_string)
@@ -93,17 +92,13 @@ class TerminalSelector():
 
         else:
             ps = 'ps -eo comm,args | grep -E "^(gnome-session|ksmserver|' + \
-                'xfce4-session|lxsession|mate-panel|cinnamon-sessio)" | grep -v grep'
-            wm = [x.replace("\n", '') for x in os.popen(ps)]
-            if wm:
+                    'xfce4-session|lxsession|mate-panel|cinnamon-sessio)" | grep -v grep'
+            if wm := [x.replace("\n", '') for x in os.popen(ps)]:
                 # elementary OS: `/usr/lib/gnome-session/gnome-session-binary --session=pantheon`
                 # Gnome: `gnome-session` or `gnome-session-binary`
                 # Linux Mint Cinnamon: `cinnamon-session --session cinnamon`
                 if wm[0].startswith('gnome-session') or wm[0].startswith('cinnamon-sessio'):
-                    if 'pantheon' in wm[0]:
-                        default = 'pantheon-terminal'
-                    else:
-                        default = 'gnome-terminal'
+                    default = 'pantheon-terminal' if 'pantheon' in wm[0] else 'gnome-terminal'
                 elif wm[0].startswith('xfce4-session'):
                     default = 'xfce4-terminal'
                 elif wm[0].startswith('ksmserver'):
@@ -144,11 +139,7 @@ class TerminalCommand():
             args.extend(parameters)
 
             encoding = locale.getpreferredencoding(do_setlocale=True)
-            if sys.version_info >= (3,):
-                cwd = dir_
-            else:
-                cwd = dir_.encode(encoding)
-
+            cwd = dir_ if sys.version_info >= (3,) else dir_.encode(encoding)
             # Copy over environment settings onto parent environment
             env_setting = get_setting('env', {})
             env = os.environ.copy()
@@ -171,12 +162,12 @@ class TerminalCommand():
             # Run our process
             subprocess.Popen(args, cwd=cwd, env=env)
 
-        except (OSError) as exception:
-            print(str(exception))
+        except OSError as exception:
+            print(exception)
             sublime.error_message('Terminal: The terminal ' +
                 TerminalSelector.get() + ' was not found')
-        except (Exception) as exception:
-            sublime.error_message('Terminal: ' + str(exception))
+        except Exception as exception:
+            sublime.error_message(f'Terminal: {str(exception)}')
 
 
 class OpenTerminalCommand(sublime_plugin.WindowCommand, TerminalCommand):
@@ -207,7 +198,7 @@ class OpenTerminalProjectFolderCommand(sublime_plugin.WindowCommand,
         # DEV: We require separator to be appended since `/hello` and `/hello-world`
         #   would both match a file in `/hello` without it
         #   For more info, see https://github.com/wbond/sublime_terminal/issues/86
-        folders = [x for x in self.window.folders() if path.find(x + os.sep) == 0][0:1]
+        folders = [x for x in self.window.folders() if path.find(x + os.sep) == 0][:1]
 
         command = OpenTerminalCommand(self.window)
         command.run(folders, parameters=parameters)
