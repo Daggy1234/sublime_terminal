@@ -21,7 +21,7 @@ done
 if (( $(expr $VERSION '<' 10.7) )); then
 	RUNNING=$(osascript<<END
 	tell application "System Events"
-		count(processes whose name is "iTerm2")
+		count(processes whose name is "iTerm 2")
 	end tell
 END
 )
